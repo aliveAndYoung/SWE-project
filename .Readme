@@ -1,0 +1,30 @@
+SkyWay -  Travel Booking System
+
+TEAM MEMBERS
+
+    1- Amr Khaled Elhefnawy
+
+    2- Youssef Mohamed Hegazy
+
+    3- Mohamed Essam Ibrahim
+
+    4- Mohamed Ezzat Saad
+
+    5- Nour Eldeen Mohamed Yehia
+
+
+Project Overview
+
+    SkyWay is a travel booking system inspired by Expedia, designed to provide users with a seamless experience for searching, booking, and managing flights. The system includes features such as user authentication, flight search, booking management, payment processing, and an admin dashboard for managing flights and monitoring analytics.
+
+Key Features
+
+    User Authentication: Secure sign-up, login, and profile management.
+
+    Flight Search & Booking: Find flights based on location, date, and preferences.
+
+    Payment Processing: Support for payment via visaCard.
+
+    User Dashboard: View, modify, or cancel bookings with notifications.
+
+    Admin Management: Manage flights, track bookings, and analyze trends.
