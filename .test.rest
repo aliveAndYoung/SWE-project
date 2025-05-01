@@ -1,0 +1,30 @@
+### Get all products
+GET http://localhost:3000/products
+
+### Create a product
+POST http://localhost:3000/products
+Content-Type: application/json
+
+{
+  "id": 3,
+  "name": "New Product",
+  "price": 40
+}
+
+### Get all users
+GET http://localhost:3000/users
+
+### Create a user
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "id": 3,
+  "name": "New User",
+  "email": "newuser@example.com"
+}
+
+
+
+### Test ID checker middleware (should pass)
+GET http://localhost:3000/products/1
