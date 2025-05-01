@@ -1,0 +1,34 @@
+# User Authentication Endpoints
+
+### Register a new user
+POST http://localhost:3030/api/auth/register 
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "location": "New York",
+    "dob": "1990-01-01",
+    "ssn": "123-45-678",
+    "visaCardNumber": "1234-5678-9012-3456",
+    "visaExpiry": "12/2025",
+    "visaCW": "123"
+}
+
+### Login an existing user
+POST http://localhost:3030/api/auth/login 
+Content-Type: application/json
+
+{
+    "email": "john@example.com",
+    "password": "password123"
+}
+
+### Get the current user (requires authentication)
+GET http://localhost:3030/api/auth/me 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0NjE0MjU2NSwiZXhwIjoxNzQ4NzM0NTY1fQ.ZpLYVsRd2-wC858E7FYlTp8TH4J_Zo3ukZiphRfju6s
+
+# Note: Replace {{token}} with the actual token received from the login response
+
