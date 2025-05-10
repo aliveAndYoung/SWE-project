@@ -28,7 +28,45 @@ Content-Type: application/json
 
 ### Get the current user (requires authentication)
 GET http://localhost:3030/api/auth/me 
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0NjE0MjU2NSwiZXhwIjoxNzQ4NzM0NTY1fQ.ZpLYVsRd2-wC858E7FYlTp8TH4J_Zo3ukZiphRfju6s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss
 
-# Note: Replace {{token}} with the actual token received from the login response
+# Payment System Endpoints
 
+### Create a new payment
+POST http://localhost:3030/api/payments
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss
+
+{
+    "amount": 100.00,
+    "currency": "USD",
+    "paymentMethod": "visa",
+    "paymentDetails": {
+        "cardNumber": "4111111111111111",
+        "expiryDate": "12/25",
+        "cvv": "123"
+    },
+    "description": "Service payment for consultation"
+}
+
+### Get payment history
+GET http://localhost:3030/api/payments/history
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss
+
+### Get single payment details
+GET http://localhost:3030/api/payments/681f6bae9abab7e77daa4797
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss
+
+### Process refund for a payment
+POST http://localhost:3030/api/payments/681f6bae9abab7e77daa4797/refund
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss
+
+{
+    "refundAmount": 50.00,
+    "reason": "Customer requested partial refund"
+}
+
+### Verify payment status
+GET http://localhost:3030/api/payments/681f6bae9abab7e77daa4797/verify
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTQwNTM0MDE4MGViYWY0ZGY3NWRlYiIsImlhdCI6MTc0Njg4OTYwMywiZXhwIjoxNzQ5NDgxNjAzfQ.WUWW8CuYMJyUTl_W0bVuPCkN8rj0MeXTzRpYQu9rKss

@@ -19,9 +19,11 @@ app.use(express.json());
 
 // import routes
 const authRoute = require("./routes/auth.js");
+const paymentRoute = require("./routes/payment.js");
 
 // use routes
 app.use("/api/auth", authRoute);
+app.use("/api/payments", paymentRoute);
 
 // apply global error handler
 const errorHandler = require("./middlewares/globalErrorHandler.js");
