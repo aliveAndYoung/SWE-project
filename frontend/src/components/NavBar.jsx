@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaBell, FaUser, FaPlane } from 'react-icons/fa';
+import { FaHome, FaBell, FaUser } from 'react-icons/fa';
 
 const navItems = [
   { to: '/', label: 'Home', icon: <FaHome /> },
-  { to: '/search-flights', label: 'Flights', icon: <FaPlane /> }, // Use Search Flights path for demo
+  { to: '/search-flights', label: 'Notifications', icon: <FaBell /> },
   { to: '/account', label: 'Profile', icon: <FaUser /> },
 ];
 
@@ -24,11 +24,10 @@ function getRandomActiveClass() {
 }
 
 export default function NavBar() {
-  // Use a ref to keep the same random class for each render of the component
   const activeClassRef = useRef(getRandomActiveClass());
 
   return (
-    <nav className="mx-auto mt-8 flex w-fit max-w-full items-center gap-6 sm:gap-8 rounded-2xl bg-zinc-900/90 px-4 sm:px-8 py-2 sm:py-3 shadow-lg border border-zinc-700 backdrop-blur-md">
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 mx-auto flex w-fit max-w-full items-center gap-6 sm:gap-8 rounded-2xl bg-zinc-900/90 px-4 sm:px-8 py-2 sm:py-3 shadow-lg border border-zinc-700 backdrop-blur-md">
       {navItems.map(({ to, label, icon }) => (
         <NavLink
           key={to}
