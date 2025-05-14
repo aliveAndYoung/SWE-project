@@ -14,7 +14,23 @@ app.use(morgan("tiny"));
 const cors = require("cors");
 app.use(cors());
 
-// process json paylaod
+// use helmet for security headers
+const helmet = require("helmet");
+app.use(helmet());
+
+// use xss-clean to prevent XSS attacks
+const xss = require("xss-clean");
+app.use(xss());
+
+// use hpp to prevent HTTP Parameter Pollution
+const hpp = require("hpp");
+app.use(hpp());
+
+// use express-mongo-sanitize to prevent NoSQL injection
+const mongoSanitize = require("express-mongo-sanitize");
+app.use(mongoSanitize());
+
+// process json payload
 app.use(express.json());
 
 // import routes
@@ -32,6 +48,14 @@ app.use(errorHandler);
 // connect to mongo db and start the server
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 5000;
+
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err) => {
+    console.log(`Error: ${err.message}`);
+    // Close server & exit process
+    process.exit(1);
+});
+
 mongoose
     .connect(process.env.MONGODB_URI)
     .then(() => {

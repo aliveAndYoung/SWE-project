@@ -1,42 +1,20 @@
 const User = require("../models/user");
 const ErrorResponse = require("../utils/errorResponse");
-const asyncHandler = require("../middlewares/asyncHandler");
-const generateResponse = require("../utils/generateResponse");
+const asyncHandler = require("../middlewares/async");
 
-// @desc    Register a new user
+// @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res, next) => {
-    const {
-        email,
-        password,
-        firstName,
-        lastName,
-        location,
-        dob,
-        ssn,
-        visaCardNumber,
-        visaExpiry,
-        visaCW,
-    } = req.body;
+    const { email, password, firstName, lastName } = req.body;
 
-    // Validate required fields
-    if (!email || !password || !firstName || !lastName) {
-        return next(new ErrorResponse("Missing required fields", 400));
-    }
-
-    // Create user with all provided fields
+    // Create user
     const user = await User.create({
         email,
         password,
         firstName,
         lastName,
-        location,
-        dob: dob ? new Date(dob) : null,
-        ssn,
-        visaCardNumber,
-        visaExpiry,
-        visaCW,
+        isVerified: true // Set to true by default since we're not using email verification
     });
 
     sendTokenResponse(user, 201, res);
@@ -48,23 +26,37 @@ const register = asyncHandler(async (req, res, next) => {
 const login = asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
 
+    // Validate email & password
     if (!email || !password) {
-        return next(
-            new ErrorResponse("Please provide email and password", 400)
-        );
+        return next(new ErrorResponse('Please provide an email and password', 400));
     }
 
-    // Explicitly select password field which is normally hidden
-    const user = await User.findOne({ email }).select("+password");
+    // Check for user
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-        return next(new ErrorResponse("Invalid credentials", 401));
+        return next(new ErrorResponse('Invalid credentials', 401));
     }
 
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-        return next(new ErrorResponse("Invalid credentials", 401));
+    // Check if account is locked
+    if (user.isLocked()) {
+        return next(new ErrorResponse('Account is locked. Please try again later', 401));
     }
+
+    // Check if password matches
+    const isMatch = await user.matchPassword(password);
+
+    if (!isMatch) {
+        // Increment login attempts
+        await user.incrementLoginAttempts();
+        return next(new ErrorResponse('Invalid credentials', 401));
+    }
+
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    user.lastLogin = Date.now();
+    await user.save();
 
     sendTokenResponse(user, 200, res);
 });
@@ -72,17 +64,12 @@ const login = asyncHandler(async (req, res, next) => {
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
-const getMe = asyncHandler(async (req, res) => {
-    // Exclude sensitive fields
-    const user = await User.findById(req.user.id).select(
-        "-password -ssn -visaCardNumber -visaCW"
-    );
-
-    if (!user) {
-        return next(new ErrorResponse("User not found", 404));
-    }
-
-    res.status(200).json(generateResponse(true, 200, user));
+const getMe = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id);
+    res.status(200).json({
+        success: true,
+        data: user
+    });
 });
 
 // @desc    Update user details
@@ -92,25 +79,75 @@ const updateDetails = asyncHandler(async (req, res, next) => {
     const fieldsToUpdate = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        email: req.body.email,
-        location: req.body.location,
-        dob: req.body.dob ? new Date(req.body.dob) : null,
+        email: req.body.email
     };
 
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
         new: true,
-        runValidators: true,
-    }).select("-password -ssn -visaCardNumber -visaCW");
+        runValidators: true
+    });
 
-    res.status(200).json(generateResponse(true, 200, user));
+    res.status(200).json({
+        success: true,
+        data: user
+    });
 });
 
-// Helper: Get token from model, create cookie and send response
+// @desc    Update password
+// @route   PUT /api/auth/updatepassword
+// @access  Private
+const updatePassword = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user.id).select('+password');
+
+    // Check current password
+    if (!(await user.matchPassword(req.body.currentPassword))) {
+        return next(new ErrorResponse('Password is incorrect', 401));
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    sendTokenResponse(user, 200, res);
+});
+
+// @desc    Log user out / clear cookie
+// @route   GET /api/auth/logout
+// @access  Private
+const logout = asyncHandler(async (req, res, next) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    });
+
+    res.status(200).json({
+        success: true,
+        data: {}
+    });
+});
+
+// Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
+    // Create token
     const token = user.getSignedJwtToken();
 
-    res.status(statusCode)
-    .json(generateResponse(true, statusCode, { token }));
+    const options = {
+        expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+        ),
+        httpOnly: true
+    };
+
+    if (process.env.NODE_ENV === 'production') {
+        options.secure = true;
+    }
+
+    res
+        .status(statusCode)
+        .cookie('token', token, options)
+        .json({
+            success: true,
+            token
+        });
 };
 
 module.exports = {
@@ -118,4 +155,6 @@ module.exports = {
     login,
     getMe,
     updateDetails,
+    updatePassword,
+    logout
 };

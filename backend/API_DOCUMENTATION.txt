@@ -1,0 +1,200 @@
+API Documentation
+=================
+
+Base URLs
+---------
+- Auth endpoints: `/api/auth`
+- Payment endpoints: `/api/payments`
+
+Auth Endpoints
+--------------
+
+1. Register
+   - POST `/api/auth/register`
+   - Request Body:
+     {
+       "email": "string (required)",
+       "password": "string (required)",
+       "firstName": "string (required)",
+       "lastName": "string (required)"
+     }
+   - Response:
+     {
+       "success": true,
+       "token": "jwt_token_string"
+     }
+     (Sets a `token` cookie as well.)
+
+2. Login
+   - POST `/api/auth/login`
+   - Request Body:
+     {
+       "email": "string (required)",
+       "password": "string (required)"
+     }
+   - Response:
+     {
+       "success": true,
+       "token": "jwt_token_string"
+     }
+     (Sets a `token` cookie as well.)
+
+3. Get Current User
+   - GET `/api/auth/me`
+   - Headers: Authorization: Bearer <token> (or via cookie)
+   - Response:
+     {
+       "success": true,
+       "data": {
+         "_id": "string",
+         "email": "string",
+         "firstName": "string",
+         "lastName": "string",
+         "role": "customer|staff|admin",
+         "isActive": true,
+         "lastLogin": "date",
+         "loginAttempts": 0,
+         "lockUntil": "date|null",
+         "location": "string|null",
+         "dob": "date|null",
+         "visaExpiry": "string|null",
+         "createdAt": "date",
+         "updatedAt": "date"
+         // ...other non-sensitive fields
+       }
+     }
+
+4. Update User Details
+   - PUT `/api/auth/updatedetails`
+   - Headers: Authorization: Bearer <token>
+   - Request Body: (any or all fields)
+     {
+       "firstName": "string",
+       "lastName": "string",
+       "email": "string"
+     }
+   - Response:
+     {
+       "success": true,
+       "data": { ...updated user object (see above) }
+     }
+
+5. Update Password
+   - PUT `/api/auth/updatepassword`
+   - Headers: Authorization: Bearer <token>
+   - Request Body:
+     {
+       "currentPassword": "string (required)",
+       "newPassword": "string (required)"
+     }
+   - Response:
+     {
+       "success": true,
+       "token": "jwt_token_string"
+     }
+     (Sets a new `token` cookie as well.)
+
+6. Logout
+   - GET `/api/auth/logout`
+   - Headers: Authorization: Bearer <token>
+   - Response:
+     {
+       "success": true,
+       "data": {}
+     }
+     (Clears the `token` cookie.)
+
+Payment Endpoints (All require authentication)
+----------------------------------------------
+
+1. Create Payment
+   - POST `/api/payments/`
+   - Headers: Authorization: Bearer <token>
+   - Request Body:
+     {
+       "amount": 100.0,
+       "currency": "USD",
+       "paymentMethod": "visa|mastercard|paypal",
+       "paymentDetails": {
+         "cardNumber": "string (required for visa/mastercard)",
+         "expiryDate": "string (required for visa/mastercard)",
+         "cvv": "string (required for visa/mastercard)"
+       },
+       "description": "string"
+     }
+   - Response:
+     {
+       "success": true,
+       "statusCode": 201,
+       "data": {
+         "payment": { ...payment object },
+         "message": "Payment processed successfully"
+       }
+     }
+
+2. Get Payment History
+   - GET `/api/payments/history`
+   - Headers: Authorization: Bearer <token>
+   - Response:
+     {
+       "success": true,
+       "statusCode": 200,
+       "data": {
+         "count": 2,
+         "payments": [ { ...payment object }, ... ]
+       }
+     }
+     (Sensitive fields like `cardNumber` and `cvv` are omitted.)
+
+3. Get Single Payment
+   - GET `/api/payments/:id`
+   - Headers: Authorization: Bearer <token>
+   - Response:
+     {
+       "success": true,
+       "statusCode": 200,
+       "data": { ...payment object }
+     }
+     (Sensitive fields like `cardNumber` and `cvv` are omitted.)
+
+4. Process Refund
+   - POST `/api/payments/:id/refund`
+   - Headers: Authorization: Bearer <token>
+   - Request Body:
+     {
+       "refundAmount": 50.0,
+       "reason": "string"
+     }
+   - Response:
+     {
+       "success": true,
+       "statusCode": 200,
+       "data": {
+         "payment": { ...payment object },
+         "message": "Refund processed successfully"
+       }
+     }
+
+5. Verify Payment
+   - GET `/api/payments/:id/verify`
+   - Headers: Authorization: Bearer <token>
+   - Response:
+     {
+       "success": true,
+       "statusCode": 200,
+       "data": {
+         "payment": { ...payment object },
+         "isVerified": true,
+         "message": "Payment verified successfully"
+       }
+     }
+
+Notes
+-----
+- All endpoints that require authentication expect a valid JWT token, either in the Authorization header or as a cookie.
+- All error responses follow the shape:
+  {
+    "success": false,
+    "error": "Error message"
+  }
+  with appropriate HTTP status codes. 
