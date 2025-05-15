@@ -1,110 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const cities = [
-    "Paris",
-    "New York",
-    "Sydney",
-    "Rome",
-    "London",
-    "Tokyo",
-    "Dubai",
-    "Cairo",
-];
-
-export const mockFlights = [
-    {
-        id: 1,
-        from: "Paris",
-        to: "New York",
-        date: "2024-06-20",
-        time: "09:00",
-        airline: "Air France",
-        price: "$450",
-    },
-    {
-        id: 2,
-        from: "New York",
-        to: "London",
-        date: "2024-06-21",
-        time: "14:30",
-        airline: "British Airways",
-        price: "$500",
-    },
-    {
-        id: 3,
-        from: "Sydney",
-        to: "Tokyo",
-        date: "2024-06-22",
-        time: "07:45",
-        airline: "Qantas",
-        price: "$600",
-    },
-    // Additional mock data for better table visibility
-    {
-        id: 4,
-        from: "London",
-        to: "Dubai",
-        date: "2024-06-23",
-        time: "16:00",
-        airline: "Emirates",
-        price: "$700",
-    },
-    {
-        id: 5,
-        from: "Cairo",
-        to: "Rome",
-        date: "2024-06-24",
-        time: "11:15",
-        airline: "EgyptAir",
-        price: "$350",
-    },
-    {
-        id: 6,
-        from: "Tokyo",
-        to: "Sydney",
-        date: "2024-06-25",
-        time: "19:30",
-        airline: "ANA",
-        price: "$620",
-    },
-    {
-        id: 7,
-        from: "Dubai",
-        to: "Paris",
-        date: "2024-06-26",
-        time: "05:50",
-        airline: "Air France",
-        price: "$800",
-    },
-    {
-        id: 8,
-        from: "Rome",
-        to: "Cairo",
-        date: "2024-06-27",
-        time: "13:10",
-        airline: "Alitalia",
-        price: "$400",
-    },
-    {
-        id: 9,
-        from: "London",
-        to: "New York",
-        date: "2024-06-28",
-        time: "08:00",
-        airline: "Virgin Atlantic",
-        price: "$550",
-    },
-    {
-        id: 10,
-        from: "Paris",
-        to: "Tokyo",
-        date: "2024-06-29",
-        time: "22:20",
-        airline: "Japan Airlines",
-        price: "$900",
-    },
-];
+import { cities } from '../mockdata/cities';
+import { mockFlights } from '../mockdata/mockFlights';
+import { apiGet } from '../util/api';
 
 export default function SearchFlights() {
     const [from, setFrom] = useState("");
@@ -115,17 +13,33 @@ export default function SearchFlights() {
     const [filteredFlights, setFilteredFlights] = useState([]);
     const navigate = useNavigate();
 
-    function handleSearch() {
-        // Filter mockFlights based on selected criteria
-        let results = mockFlights.filter((f) => {
-            return (
+    async function handleSearch() {
+        // Try to fetch from backend
+        try {
+            const params = {};
+            if (from) params.from = from;
+            if (to) params.to = to;
+            if (date) params.date = date;
+            if (time) params.time = time;
+            const res = await apiGet('/api/flights', undefined, params);
+            if (res.success && Array.isArray(res.data)) {
+                setFilteredFlights(res.data.map(f => ({ ...f, price: `$${f.price}` })));
+            } else {
+                setFilteredFlights(mockFlights.filter(f =>
+                    (!from || f.from === from) &&
+                    (!to || f.to === to) &&
+                    (!date || f.date === date) &&
+                    (!time || f.time === time)
+                ));
+            }
+        } catch {
+            setFilteredFlights(mockFlights.filter(f =>
                 (!from || f.from === from) &&
                 (!to || f.to === to) &&
                 (!date || f.date === date) &&
                 (!time || f.time === time)
-            );
-        });
-        setFilteredFlights(results);
+            ));
+        }
         setShowResults(true);
     }
 
@@ -278,7 +192,7 @@ export default function SearchFlights() {
                                     ) : (
                                         filteredFlights.map((f) => (
                                             <tr
-                                                key={f.id}
+                                                key={f._id || f.id}
                                                 className="hover:bg-blue-900/20 transition"
                                             >
                                                 <td className="py-2 px-2 sm:px-4">
@@ -304,7 +218,7 @@ export default function SearchFlights() {
                                                         className="px-2 sm:px-4 py-1 rounded-full bg-gradient-to-r from-blue-900 to-purple-900 text-white font-semibold shadow hover:scale-105 transition text-xs sm:text-base"
                                                         onClick={() =>
                                                             navigate(
-                                                                `/flights/${f.id}`
+                                                                `/flights/${f._id || f.id}`
                                                             )
                                                         }
                                                     >

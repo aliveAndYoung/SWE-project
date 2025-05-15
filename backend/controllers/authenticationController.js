@@ -76,11 +76,13 @@ const getMe = asyncHandler(async (req, res, next) => {
 // @route   PUT /api/auth/updatedetails
 // @access  Private
 const updateDetails = asyncHandler(async (req, res, next) => {
-    const fieldsToUpdate = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email
-    };
+    const fieldsToUpdate = {};
+    const updatableFields = [
+        'firstName', 'lastName', 'email', 'location', 'ssn', 'dob', 'visaCardNumber', 'visaExpiry', 'visaCW'
+    ];
+    updatableFields.forEach(field => {
+        if (req.body[field] !== undefined) fieldsToUpdate[field] = req.body[field];
+    });
 
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
         new: true,
