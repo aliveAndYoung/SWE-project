@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { mockFlights } from "../mockdata/mockFlights";
 import { apiGet } from '../util/api';
 
@@ -28,6 +28,7 @@ async function fetchCityImage(city) {
 
 export default function FlightDetails() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [flight, setFlight] = useState(null);
     const [bgUrl, setBgUrl] = useState("");
     useEffect(() => {
@@ -155,6 +156,12 @@ export default function FlightDetails() {
                             </span>
                             !
                         </span>
+                        <button
+                            className="mt-2 px-6 py-2 rounded-full bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold shadow hover:scale-105 transition"
+                            onClick={() => navigate('/booking', { state: { flightId: flight._id || flight.id } })}
+                        >
+                            Book Now
+                        </button>
                         <Link
                             to="/search-flights"
                             className="mt-2 px-6 py-2 rounded-full bg-gradient-to-r from-blue-900 to-purple-900 text-white font-bold shadow hover:scale-105 transition"
