@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaRocket } from 'react-icons/fa';
 import axios from 'axios';
 import InputField from '../components/InputField';
+import { MOCK_USER } from '../mockdata/mockUser';
 
 const initialRegisterData = {
   email: '',
@@ -28,6 +29,14 @@ export default function Login() {
     setLoginError('');
     const email = e.target.email.value;
     const password = e.target.password.value;
+    // Check for mock user login
+    if (email === MOCK_USER.email && password === MOCK_USER.password) {
+      // Store mock user and fake token
+      localStorage.setItem('user', JSON.stringify(MOCK_USER));
+      localStorage.setItem('token', 'mock-token');
+      navigate('/account', { replace: true });
+      return;
+    }
     if (email && password) {
       try {
         const res = await axios.post('http://localhost:3030/api/auth/login', { email, password }, { withCredentials: true });
@@ -137,8 +146,8 @@ export default function Login() {
   function renderLoginForm() {
     return (
       <form className="w-full flex flex-col gap-6" onSubmit={handleLogin}>
-        <InputField name="email" type="email" required placeholder="Email" />
-        <InputField name="password" type="password" required placeholder="Password" />
+        <InputField name="email" type="email" required placeholder={`Email (e.g. ${MOCK_USER.email})`} defaultValue={MOCK_USER.email} />
+        <InputField name="password" type="password" required placeholder={`Password (e.g. ${MOCK_USER.password})`} defaultValue={MOCK_USER.password} />
         {loginError && <div className="text-red-500 text-sm text-center">{loginError}</div>}
         <button type="submit" className="rounded-full px-6 py-2 font-bold text-white bg-gradient-to-r from-blue-900 to-zinc-900 shadow-lg transition-transform duration-200 hover:scale-105 focus:outline-none">Sign In</button>
       </form>

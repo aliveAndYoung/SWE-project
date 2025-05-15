@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiPut } from '../util/api';
+import { apiPut, apiGet } from '../util/api';
 
 // Helper to generate avatar URL (e.g., via ui-avatars.com)
 function getAvatarUrl(user) {
@@ -10,13 +10,6 @@ function getAvatarUrl(user) {
             : user.email || "User"
     );
     return `https://ui-avatars.com/api/?name=${name}&background=1e293b&color=fff&size=128&bold=true`;
-}
-
-// Mock bookings if none exist
-function getUserBookings(email) {
-    const bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
-    // Filter bookings for this user (by email)
-    return bookings.filter((b) => b.email === email);
 }
 
 const requiredFields = [
@@ -57,7 +50,22 @@ export default function Account() {
             const parsed = JSON.parse(userData);
             setUser(parsed);
             setEditData(parsed);
-            setBookings(getUserBookings(parsed.email));
+            // Fetch bookings from backend
+            const token = localStorage.getItem('token');
+            apiGet('/api/bookings/user', token).then(res => {
+                if (res.success && Array.isArray(res.data)) {
+                    setBookings(res.data.map(b => ({
+                        flight: b.flight,
+                        date: b.flight?.date,
+                        from: b.flight?.from,
+                        to: b.flight?.to,
+                        price: b.flight?.price,
+                        bookingId: b._id
+                    })));
+                } else {
+                    setBookings([]);
+                }
+            }).catch(() => setBookings([]));
         } else {
             navigate("/login", { replace: true });
         }
@@ -308,13 +316,14 @@ export default function Account() {
                                             )}
                                         </th>
                                     ))}
+                                    <th>Booking ID</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {getSortedFilteredBookings().length === 0 ? (
                                     <tr>
                                         <td
-                                            colSpan={tableColumns.length}
+                                            colSpan={tableColumns.length + 1}
                                             className="py-8 text-zinc-400 text-lg"
                                         >
                                             no bookings yet —{" "}
@@ -329,14 +338,12 @@ export default function Account() {
                                             key={i}
                                             className="hover:bg-blue-900/20 transition"
                                         >
-                                            {tableColumns.map((col) => (
-                                                <td
-                                                    key={col.key}
-                                                    className="py-2 px-4"
-                                                >
-                                                    {b[col.key]}
-                                                </td>
-                                            ))}
+                                            <td className="py-2 px-4">{b.flight?.airline || '-'}</td>
+                                            <td className="py-2 px-4">{b.flight?.date ? b.flight.date.slice(0, 10) : '-'}</td>
+                                            <td className="py-2 px-4">{b.flight?.from || '-'}</td>
+                                            <td className="py-2 px-4">{b.flight?.to || '-'}</td>
+                                            <td className="py-2 px-4">{b.flight?.price != null ? `$${b.flight.price}` : '-'}</td>
+                                            <td className="py-2 px-4 font-mono">{b.bookingId || '-'}</td>
                                         </tr>
                                     ))
                                 )}
