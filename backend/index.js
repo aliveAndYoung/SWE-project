@@ -12,7 +12,10 @@ app.use(morgan("tiny"));
 
 // use cors for cross-origin resource sharing
 const cors = require("cors");
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // your frontend's URL
+  credentials: true
+}));
 
 // use helmet for security headers
 const helmet = require("helmet");
