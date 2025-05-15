@@ -113,7 +113,7 @@
       "status": "success",
       "token": "<JWT>"
     }
-    ```
+    ``` 
 
 ## 7. Sign In
 - **POST /api/auth/login**

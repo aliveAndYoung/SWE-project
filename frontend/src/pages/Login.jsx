@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaRocket } from 'react-icons/fa';
+import axios from 'axios';
+import InputField from '../components/InputField';
 
 const initialRegisterData = {
   email: '',
@@ -21,19 +23,44 @@ export default function Login() {
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
+    setLoginError('');
     const email = e.target.email.value;
     const password = e.target.password.value;
     if (email && password) {
-      localStorage.setItem('user', JSON.stringify({ email }));
-      navigate('/account', { replace: true });
+      try {
+        const res = await axios.post('http://localhost:3030/api/auth/login', { email, password }, { withCredentials: true });
+        if (res.data && res.data.success && res.data.token) {
+          const token = res.data.token;
+          localStorage.setItem('token', token);
+          // Fetch user info
+          try {
+            const userRes = await axios.get('http://localhost:3030/api/auth/me', {
+              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true
+            });
+            if (userRes.data && userRes.data.success) {
+              localStorage.setItem('user', JSON.stringify(userRes.data.data));
+              navigate('/account', { replace: true });
+            } else {
+              setLoginError('Failed to fetch user info');
+            }
+          } catch (userErr) {
+            setLoginError('Failed to fetch user info');
+          }
+        } else {
+          setLoginError(res.data.error || 'Login failed');
+        }
+      } catch (err) {
+        setLoginError(err.response?.data?.error || 'Login failed');
+      }
     } else {
       setLoginError('Invalid credentials');
     }
   }
 
-  function handleRegisterStep(e) {
+  async function handleRegisterStep(e) {
     e.preventDefault();
     setRegisterError('');
     const form = e.target;
@@ -41,7 +68,7 @@ export default function Login() {
       const email = form.email.value;
       const password = form.password.value;
       const confirmPassword = form.confirmPassword.value;
-      if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+      if (!/^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$/.test(email)) {
         setRegisterError('Invalid email format');
         return;
       }
@@ -71,22 +98,47 @@ export default function Login() {
       setRegisterData(d => ({ ...d, ssn, dob }));
       setRegisterStep(3);
     } else if (registerStep === 3) {
-      localStorage.setItem('user', JSON.stringify(registerData));
-      navigate('/account', { replace: true });
+      // Final step: submit registration to backend
+      try {
+        const { email, password, firstName, lastName } = registerData;
+        const res = await axios.post('http://localhost:3030/api/auth/register', {
+          email,
+          password,
+          firstName,
+          lastName
+        }, { withCredentials: true });
+        if (res.data && res.data.success && res.data.token) {
+          const token = res.data.token;
+          localStorage.setItem('token', token);
+          // Fetch user info
+          try {
+            const userRes = await axios.get('http://localhost:3030/api/auth/me', {
+              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true
+            });
+            if (userRes.data && userRes.data.success) {
+              localStorage.setItem('user', JSON.stringify(userRes.data.data));
+              navigate('/account', { replace: true });
+            } else {
+              setRegisterError('Failed to fetch user info');
+            }
+          } catch (userErr) {
+            setRegisterError('Failed to fetch user info');
+          }
+        } else {
+          setRegisterError(res.data.error || 'Registration failed');
+        }
+      } catch (err) {
+        setRegisterError(err.response?.data?.error || 'Registration failed');
+      }
     }
   }
 
   function renderLoginForm() {
     return (
       <form className="w-full flex flex-col gap-6" onSubmit={handleLogin}>
-        <div className="relative">
-          <input name="email" type="email" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Email" />
-          <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Email</label>
-        </div>
-        <div className="relative">
-          <input name="password" type="password" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Password" />
-          <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Password</label>
-        </div>
+        <InputField name="email" type="email" required placeholder="Email" />
+        <InputField name="password" type="password" required placeholder="Password" />
         {loginError && <div className="text-red-500 text-sm text-center">{loginError}</div>}
         <button type="submit" className="rounded-full px-6 py-2 font-bold text-white bg-gradient-to-r from-blue-900 to-zinc-900 shadow-lg transition-transform duration-200 hover:scale-105 focus:outline-none">Sign In</button>
       </form>
@@ -98,46 +150,22 @@ export default function Login() {
       <form className="w-full flex flex-col gap-6 animate-fadein" onSubmit={handleRegisterStep}>
         {registerStep === 0 && (
           <>
-            <div className="relative">
-              <input name="email" type="email" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Email" defaultValue={registerData.email} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Email</label>
-            </div>
-            <div className="relative">
-              <input name="password" type="password" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Password" defaultValue={registerData.password} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Password</label>
-            </div>
-            <div className="relative">
-              <input name="confirmPassword" type="password" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Confirm Password" defaultValue={registerData.confirmPassword} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Confirm Password</label>
-            </div>
+            <InputField name="email" type="email" required placeholder="Email" defaultValue={registerData.email} />
+            <InputField name="password" type="password" required placeholder="Password" defaultValue={registerData.password} />
+            <InputField name="confirmPassword" type="password" required placeholder="Confirm Password" defaultValue={registerData.confirmPassword} />
           </>
         )}
         {registerStep === 1 && (
           <>
-            <div className="relative">
-              <input name="firstName" type="text" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="First Name" defaultValue={registerData.firstName} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">First Name</label>
-            </div>
-            <div className="relative">
-              <input name="lastName" type="text" required className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Last Name" defaultValue={registerData.lastName} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Last Name</label>
-            </div>
-            <div className="relative">
-              <input name="location" type="text" className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Location (optional)" defaultValue={registerData.location} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Location (optional)</label>
-            </div>
+            <InputField name="firstName" type="text" required placeholder="First Name" defaultValue={registerData.firstName} />
+            <InputField name="lastName" type="text" required placeholder="Last Name" defaultValue={registerData.lastName} />
+            <InputField name="location" type="text" placeholder="Location (optional)" defaultValue={registerData.location} />
           </>
         )}
         {registerStep === 2 && (
           <>
-            <div className="relative">
-              <input name="ssn" type="text" className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="SSN (optional)" defaultValue={registerData.ssn} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">SSN (optional)</label>
-            </div>
-            <div className="relative">
-              <input name="dob" type="date" className="peer rounded-none border-b-2 border-blue-900 bg-transparent px-0 pt-6 pb-2 w-full text-zinc-200 focus:outline-none focus:border-blue-400 placeholder-transparent" placeholder="Date of Birth (optional)" defaultValue={registerData.dob} />
-              <label className="absolute left-0 top-2 text-sm text-blue-300 transition-all peer-placeholder-shown:top-5 peer-placeholder-shown:text-base peer-placeholder-shown:text-blue-400 peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-200 pointer-events-none">Date of Birth (optional)</label>
-            </div>
+            <InputField name="ssn" type="text" placeholder="SSN (optional)" defaultValue={registerData.ssn} />
+            <InputField name="dob" type="date" placeholder="Date of Birth (optional)" defaultValue={registerData.dob} />
           </>
         )}
         {registerStep === 3 && (
