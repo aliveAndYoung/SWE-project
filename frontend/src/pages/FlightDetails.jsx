@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { mockFlights } from "./SearchFlights.jsx";
+import { mockFlights } from "../mockdata/mockFlights";
+import { apiGet } from '../util/api';
 
 // Fetch a city image from Wikimedia Commons (no API key required)
 async function fetchCityImage(city) {
@@ -25,21 +26,36 @@ async function fetchCityImage(city) {
     return "https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?auto=format&fit=crop&w=1500&q=80";
 }
 
-function getFlightById(id) {
-    return mockFlights.find((f) => String(f.id) === String(id));
-}
-
 export default function FlightDetails() {
     const { id } = useParams();
     const [flight, setFlight] = useState(null);
     const [bgUrl, setBgUrl] = useState("");
     useEffect(() => {
-        const f = getFlightById(id);
-        setFlight(f);
-        if (f && f.to) {
-            fetchCityImage(f.to).then(setBgUrl);
-        }
+        let isMounted = true;
+        // Try to fetch from backend
+        apiGet(`/api/flights/${id}`)
+            .then(res => {
+                if (isMounted && res.success && res.data) {
+                    setFlight({ ...res.data, price: `$${res.data.price}` });
+                } else {
+                    // fallback to mock data
+                    const f = mockFlights.find(f => String(f.id) === String(id));
+                    setFlight(f || null);
+                }
+            })
+            .catch(() => {
+                const f = mockFlights.find(f => String(f.id) === String(id));
+                setFlight(f || null);
+            });
+        return () => { isMounted = false; };
     }, [id]);
+
+    // Only fetch city image if flight exists and has a 'to' field
+    useEffect(() => {
+        if (flight && flight.to) {
+            fetchCityImage(flight.to).then(setBgUrl);
+        }
+    }, [flight]);
 
     if (!flight) {
         return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiPut } from '../util/api';
 
 // Helper to generate avatar URL (e.g., via ui-avatars.com)
 function getAvatarUrl(user) {
@@ -39,6 +40,9 @@ const tableColumns = [
 
 export default function Account() {
     const [user, setUser] = useState(null);
+    const [editMode, setEditMode] = useState(false);
+    const [editData, setEditData] = useState({});
+    const [updateError, setUpdateError] = useState('');
     const [showMore, setShowMore] = useState(false);
     const [bookings, setBookings] = useState([]);
     const [sortBy, setSortBy] = useState("date");
@@ -52,6 +56,7 @@ export default function Account() {
         if (userData) {
             const parsed = JSON.parse(userData);
             setUser(parsed);
+            setEditData(parsed);
             setBookings(getUserBookings(parsed.email));
         } else {
             navigate("/login", { replace: true });
@@ -93,6 +98,24 @@ export default function Account() {
                 : String(b[sortBy]).localeCompare(String(a[sortBy]));
         });
         return sorted;
+    }
+
+    async function handleSaveEdit(e) {
+        e.preventDefault();
+        setUpdateError('');
+        try {
+            const token = localStorage.getItem('token');
+            const res = await apiPut('/api/auth/updatedetails', editData, token);
+            if (res.success && res.data) {
+                setUser(res.data);
+                localStorage.setItem('user', JSON.stringify(res.data));
+                setEditMode(false);
+            } else {
+                setUpdateError(res.error || 'Update failed');
+            }
+        } catch {
+            setUpdateError('Update failed');
+        }
     }
 
     if (!user) return null;
@@ -162,21 +185,66 @@ export default function Account() {
                                     <span className="font-semibold text-purple-300">
                                         {f.label}:
                                     </span>{" "}
-                                    {user[f.key] || (
-                                        <span className="text-zinc-500">
-                                            (not set)
-                                        </span>
-                                    )}
+                                    {f.key === "dob" && user.dob
+                                        ? user.dob.slice(0, 10)
+                                        : user[f.key] || (
+                                            <span className="text-zinc-500">(not set)</span>
+                                        )}
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <button
-                        onClick={handleSignOut}
-                        className="mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded px-6 py-2 transition shadow-lg"
-                    >
-                        Sign Out
-                    </button>
+                    {!editMode ? (
+                        <>
+                            <button
+                                onClick={() => setEditMode(true)}
+                                className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded px-6 py-2 transition shadow-lg"
+                            >
+                                Edit
+                            </button>
+                            <button
+                                onClick={handleSignOut}
+                                className="mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded px-6 py-2 transition shadow-lg"
+                            >
+                                Sign Out
+                            </button>
+                        </>
+                    ) : (
+                        <form onSubmit={handleSaveEdit} className="flex flex-col gap-2 w-full max-w-md mx-auto mt-4">
+                            <label className="text-blue-200 font-semibold">Email
+                                <input type="email" value={editData.email || ''} onChange={e => setEditData(d => ({ ...d, email: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" required />
+                            </label>
+                            <label className="text-blue-200 font-semibold">First Name
+                                <input type="text" value={editData.firstName || ''} onChange={e => setEditData(d => ({ ...d, firstName: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" required />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Last Name
+                                <input type="text" value={editData.lastName || ''} onChange={e => setEditData(d => ({ ...d, lastName: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" required />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Location
+                                <input type="text" value={editData.location || ''} onChange={e => setEditData(d => ({ ...d, location: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            <label className="text-blue-200 font-semibold">SSN
+                                <input type="text" value={editData.ssn || ''} onChange={e => setEditData(d => ({ ...d, ssn: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Date of Birth
+                                <input type="date" value={editData.dob ? editData.dob.slice(0,10) : ''} onChange={e => setEditData(d => ({ ...d, dob: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Visa Card Number
+                                <input type="text" value={editData.visaCardNumber || ''} onChange={e => setEditData(d => ({ ...d, visaCardNumber: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Visa Expiry
+                                <input type="text" value={editData.visaExpiry || ''} onChange={e => setEditData(d => ({ ...d, visaExpiry: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            <label className="text-blue-200 font-semibold">Visa CW
+                                <input type="text" value={editData.visaCW || ''} onChange={e => setEditData(d => ({ ...d, visaCW: e.target.value }))} className="w-full rounded px-2 py-1 mt-1 bg-zinc-900 text-white border border-blue-900" />
+                            </label>
+                            {updateError && <div className="text-red-500 text-sm text-center">{updateError}</div>}
+                            <div className="flex gap-2 mt-2">
+                                <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded px-6 py-2 transition shadow-lg">Save</button>
+                                <button type="button" onClick={() => { setEditMode(false); setEditData(user); setUpdateError(''); }} className="bg-zinc-700 hover:bg-zinc-800 text-white font-semibold rounded px-6 py-2 transition shadow-lg">Cancel</button>
+                            </div>
+                        </form>
+                    )}
                 </div>
             </div>
 
