@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaBell, FaUser } from 'react-icons/fa';
+import { FaHome, FaPlane, FaUser } from 'react-icons/fa';
 
 const navItems = [
   { to: '/', label: 'Home', icon: <FaHome /> },
-  { to: '/search-flights', label: 'Notifications', icon: <FaBell /> },
+  { to: '/search-flights', label: 'Flights', icon: <FaPlane /> },
   { to: '/account', label: 'Profile', icon: <FaUser /> },
 ];
 
