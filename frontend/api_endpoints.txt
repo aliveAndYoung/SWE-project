@@ -1,0 +1,165 @@
+# API Endpoints Specification for Flight Booking App
+
+## 1. Trending Destinations
+- **GET /api/trending-destinations**
+  - **Description:** Returns a list of trending destination cities with their images and metadata.
+  - **Response Example:**
+    ```json
+    [
+      {
+        "name": "Paris",
+        "image": "https://...",
+        "description": "City of Light"
+      },
+      ...
+    ]
+    ```
+
+## 2. Flight Search
+- **GET /api/flights/search?from=Paris&to=Tokyo&date=2024-06-29&time=22:20**
+  - **Description:** Returns a list of available flights matching the search criteria. All query parameters are optional; returns all flights if none provided.
+  - **Query Parameters:**
+    - `from` (string, optional)
+    - `to` (string, optional)
+    - `date` (YYYY-MM-DD, optional)
+    - `time` (HH:mm, optional)
+  - **Response Example:**
+    ```json
+    [
+      {
+        "id": 10,
+        "from": "Paris",
+        "to": "Tokyo",
+        "date": "2024-06-29",
+        "time": "22:20",
+        "airline": "Japan Airlines",
+        "price": "$900"
+      },
+      ...
+    ]
+    ```
+
+## 3. Flight Details
+- **GET /api/flights/:id**
+  - **Description:** Returns detailed information about a specific flight by ID.
+  - **Response Example:**
+    ```json
+    {
+      "id": 10,
+      "from": "Paris",
+      "to": "Tokyo",
+      "date": "2024-06-29",
+      "time": "22:20",
+      "airline": "Japan Airlines",
+      "price": "$900",
+      "duration": "12h 30m",
+      "aircraft": "Boeing 787",
+      ...
+    }
+    ```
+
+## 4. User Profile
+- **GET /api/users/me**
+  - **Description:** Returns the authenticated user's profile data.
+  - **Authentication:** Requires JWT in Authorization header.
+  - **Response Example:**
+    ```json
+    {
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "location": "London",
+      "ssn": "...",
+      "dob": "1990-01-01"
+    }
+    ```
+
+## 5. User Bookings
+- **GET /api/users/me/bookings**
+  - **Description:** Returns a list of the authenticated user's past bookings.
+  - **Authentication:** Requires JWT in Authorization header.
+  - **Response Example:**
+    ```json
+    [
+      {
+        "flight": "AF123",
+        "date": "2024-06-20",
+        "from": "Paris",
+        "to": "New York",
+        "price": "$450"
+      },
+      ...
+    ]
+    ```
+
+## 6. Sign Up
+- **POST /api/auth/signup**
+  - **Description:** Registers a new user.
+  - **Request Body:**
+    ```json
+    {
+      "email": "user@example.com",
+      "password": "...",
+      "firstName": "John",
+      "lastName": "Doe",
+      "location": "London",
+      "ssn": "...",
+      "dob": "1990-01-01"
+    }
+    ```
+  - **Response Example:**
+    ```json
+    {
+      "status": "success",
+      "token": "<JWT>"
+    }
+    ```
+
+## 7. Sign In
+- **POST /api/auth/login**
+  - **Description:** Authenticates a user and returns a JWT.
+  - **Request Body:**
+    ```json
+    {
+      "email": "user@example.com",
+      "password": "..."
+    }
+    ```
+  - **Response Example:**
+    ```json
+    {
+      "status": "success",
+      "token": "<JWT>"
+    }
+    ```
+
+## 8. Book a Flight
+- **POST /api/bookings**
+  - **Description:** Books a flight for the authenticated user.
+  - **Authentication:** Requires JWT in Authorization header.
+  - **Request Body:**
+    ```json
+    {
+      "flightId": 10,
+      "passengerInfo": {
+        "firstName": "John",
+        "lastName": "Doe",
+        ...
+      }
+    }
+    ```
+  - **Response Example:**
+    ```json
+    {
+      "status": "success",
+      "bookingId": 1234
+    }
+    ```
+
+---
+
+# Notes
+- All endpoints should return appropriate error messages and status codes.
+- JWT should be sent in the `Authorization: Bearer <token>` header for protected endpoints.
+- Adjust field names/types as needed for your backend implementation.
+- You may add pagination, filtering, or sorting to endpoints as needed. 
