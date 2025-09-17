@@ -1,30 +1,39 @@
-SkyWay -  Travel Booking System
+# Flight Booking Web App
 
-TEAM MEMBERS
+A full-stack flight booking application for searching flights, managing bookings, and processing payments.
 
-    1- Amr Khaled Elhefnawy
+## Features
 
-    2- Youssef Mohamed Hegazy
+- **User authentication and authorization with JWT**: register, login, protected routes, account management.
+- **Flight search**: filter by from, to, date, and time.
+- **Flight details and booking**: view flight details and create bookings for authenticated users.
+- **Payment processing**: payment creation, history, verification, and refunds; Stripe Checkout session endpoint for booking.
+- **Trending destinations**: served via API with graceful frontend fallback to mock data.
+- **Global error handling and clean API responses** on the backend.
 
-    3- Mohamed Essam Ibrahim
+## Technologies Used
 
-    4- Mohamed Ezzat Saad
+- **Backend**: Node.js, Express, MongoDB (Mongoose), JWT, Stripe SDK, dotenv, morgan, CORS.
+- **Frontend**: React (Vite), Tailwind CSS, React Router, Axios, Redux Toolkit .
 
-    5- Nour Eldeen Mohamed Yehia
 
+## How to Run
 
-Project Overview
+### Backend
+```
+cd backend
+npm install
+npm run dev
+```
+The API runs on `http://localhost:3030` (update `PORT` if needed).
 
-    SkyWay is a travel booking system inspired by Expedia, designed to provide users with a seamless experience for searching, booking, and managing flights. The system includes features such as user authentication, flight search, booking management, payment processing, and an admin dashboard for managing flights and monitoring analytics.
+### Frontend
+```
+cd frontend
+npm install
+npm run dev
+```
+The app runs on `http://localhost:5173`.
 
-Key Features
-
-    User Authentication: Secure sign-up, login, and profile management.
-
-    Flight Search & Booking: Find flights based on location, date, and preferences.
-
-    Payment Processing: Support for payment via visaCard.
-
-    User Dashboard: View, modify, or cancel bookings with notifications.
-
-    Admin Management: Manage flights, track bookings, and analyze trends.
+video demo on this Drive 
+" https://drive.google.com/drive/folders/1_LTPR-AorO5mBnAc5JSVV2z_Y3yXBi5h?usp=sharing "
