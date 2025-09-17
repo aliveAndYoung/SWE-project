@@ -16,21 +16,21 @@ app.use(cors({
   credentials: true
 }));
 
-// use helmet for security headers
-const helmet = require("helmet");
-app.use(helmet());
+// // use helmet for security headers
+// const helmet = require("helmet");
+// app.use(helmet());
 
-// use xss-clean to prevent XSS attacks
-const xss = require("xss-clean");
-app.use(xss());
+// // use xss-clean to prevent XSS attacks
+// const xss = require("xss-clean");
+// app.use(xss());
 
-// use hpp to prevent HTTP Parameter Pollution
-const hpp = require("hpp");
-app.use(hpp());
+// // use hpp to prevent HTTP Parameter Pollution
+// const hpp = require("hpp");
+// app.use(hpp());
 
-// use express-mongo-sanitize to prevent NoSQL injection
-const mongoSanitize = require("express-mongo-sanitize");
-app.use(mongoSanitize());
+// // use express-mongo-sanitize to prevent NoSQL injection
+// const mongoSanitize = require("express-mongo-sanitize");
+// app.use(mongoSanitize());
 
 // process json payload
 app.use(express.json());
